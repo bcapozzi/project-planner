@@ -316,6 +316,9 @@ public class Schedule {
 		int totalCents = 0;
 		for (TaskAssignment t: tasks) {
 			
+			if (t.totalHours() == 0)
+				continue;
+			
 			totalCents += t.totalHours()*rateMapInCents.get(t.getResourceName());
 		}
 		return totalCents;

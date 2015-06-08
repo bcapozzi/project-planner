@@ -60,9 +60,9 @@ public class ProjectPlanner extends JFrame implements TableModelListener {
 	private List<String> recentFiles = new ArrayList<>();
 	private JMenu fileMenu;
 	
-	private Map<Integer,String> resourceNames = new HashMap<>();
-	private Map<Integer,String> taskNames = new HashMap<>();
-	private Map<Integer, List<Integer>> hoursByWeek = new HashMap<>();
+	//private Map<Integer,String> resourceNames = new HashMap<>();
+	//private Map<Integer,String> taskNames = new HashMap<>();
+	//private Map<Integer, List<Integer>> hoursByWeek = new HashMap<>();
 	private JComboBox<String> resourcesAvailable;
 	private List<String> uniqueResourceNames = new ArrayList<>();
 	private CostTableModel costTableModel;
@@ -76,11 +76,7 @@ public class ProjectPlanner extends JFrame implements TableModelListener {
 		for (String key: resourceRates.keySet()) {
 			uniqueResourceNames.add(key);
 		}	
-//		uniqueResourceNames.add("Analyst");
-//		uniqueResourceNames.add("Dev");
-//		uniqueResourceNames.add("Senior Analyst");
-//		uniqueResourceNames.add("Senior Dev");
-	
+
 		//projectPanel = new JPanel();
 		recentFiles = loadRecentFiles();
 		
@@ -220,6 +216,7 @@ public class ProjectPlanner extends JFrame implements TableModelListener {
 		final JPopupMenu popupMenu = new JPopupMenu();
         final JMenuItem moveUpItem = new JMenuItem("Move Up");
         final JMenuItem moveDownItem = new JMenuItem("Move Down");
+        final JMenuItem deleteItem = new JMenuItem("Delete");
         
         
 		projectTableModel = new ProjectTableModel(1,24);
@@ -267,14 +264,43 @@ public class ProjectPlanner extends JFrame implements TableModelListener {
                 projectTableModel.moveRowDown(selectedRow);
             }
         });
+        
+        deleteItem.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				int selectedRow = projectTable.getSelectedRow();
+				projectTableModel.removeTaskAssignmentInRow(selectedRow);
+				
+			}
+		});
         popupMenu.add(moveUpItem);
         popupMenu.add(moveDownItem);
+        popupMenu.add(deleteItem);
         projectTable.setComponentPopupMenu(popupMenu);
 		
 		TableColumnModel columnModel = projectTable.getColumnModel();
 		columnModel.getColumn(0).setPreferredWidth(300);
 		columnModel.getColumn(1).setPreferredWidth(200);
-		columnModel.getColumn(1).setCellEditor(new MyTableCellEditor(uniqueResourceNames.toArray(new String[0])));
+		
+		JComboBox<String> resourceOptions = new JComboBox<>(uniqueResourceNames.toArray(new String[0]));
+		MyTableCellEditor resourceSelector = new MyTableCellEditor(resourceOptions);
+		resourceOptions.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				System.out.println("Detected action.");
+				// given selected row
+				int row = projectTable.getSelectedRow();
+				JComboBox cb = (JComboBox)e.getSource();
+				int index = cb.getSelectedIndex();
+				String resource = (String)cb.getSelectedItem();
+				System.out.println("updated resource selection for row: " + row + " to resource: " + resource);
+				// given seleted item
+				projectTableModel.updateResourceForTaskInRow(row, resource);
+			}
+		});
+		columnModel.getColumn(1).setCellEditor(resourceSelector);
 		
 		DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
 		centerRenderer.setHorizontalAlignment( JLabel.CENTER );
@@ -476,12 +502,18 @@ public class ProjectPlanner extends JFrame implements TableModelListener {
 
 	public class ProjectTableModel extends AbstractTableModel implements TableModelListener {
 
+		private int numWeeks;
 		private int numRows;
 		private int numCols;
+		private List<TaskAssignment> tasks = new ArrayList<>();
+		private Map<Integer,List<Integer>> hoursByWeek = new HashMap<>();
 
 		public ProjectTableModel(int rows, int weeks) {
+			this.numWeeks = weeks;
 			this.numRows = rows;
 			this.numCols = weeks + 2 + 1;
+			tasks.add(createEmptyTask(weeks));
+			
 			List<Integer> hoursPerWeek = new ArrayList<>();
 			for (int i=0; i<weeks; i++)
 				hoursPerWeek.add(0);
@@ -490,11 +522,43 @@ public class ProjectPlanner extends JFrame implements TableModelListener {
 
 		}
 		
+		private TaskAssignment createEmptyTask(int numWeeks) {
+			TaskAssignment task = new TaskAssignment("Enter task name", "Select resource...");
+			for (int i=0; i<numWeeks; i++)
+				task.addHoursForWeek(0);
+			return task;
+		}
+
+		public void removeTaskAssignmentInRow(int selectedRow) {
+			
+			//String taskToDelete = taskNames.get(selectedRow);
+			System.out.println("Received message to delete task in row: " + selectedRow);
+		
+/*			numRows--;
+			taskNames.remove(numRows-1);
+			resourceNames.remove(numRows-1);
+			hoursByWeek.remove(numRows-1);
+			fireTableDataChanged();
+			fireTableStructureChanged();
+			*/
+		}
+
+
 		public void moveRowUp(int selectedRow) {
 			
 			// what this really means is that this row's data will swap with the one above it
 			System.out.println("Received message to move row " + selectedRow + " up...");
-			// get current elements
+			
+			// basically this is a "swap" of 2 elements in the array
+			TaskAssignment taskToMoveUp = tasks.get(selectedRow);
+			TaskAssignment taskAbovePriorToMove = tasks.get(selectedRow-1);
+			
+			tasks.set(selectedRow-1, taskToMoveUp);
+			tasks.set(selectedRow, taskAbovePriorToMove);
+			
+			updateHoursByWeek();
+			
+/*			// get current elements
 			String taskPriorToSwap = taskNames.get(selectedRow);
 			String taskAbovePriorToSwap = taskNames.get(selectedRow-1);
 			taskNames.put(selectedRow, taskAbovePriorToSwap);
@@ -509,7 +573,8 @@ public class ProjectPlanner extends JFrame implements TableModelListener {
 			List<Integer> hoursAbovePriorToSwap = hoursByWeek.get(selectedRow-1);
 			hoursByWeek.put(selectedRow, hoursAbovePriorToSwap);
 			hoursByWeek.put(selectedRow-1, hoursPriorToSwap);
-			
+	
+			*/
 			/*Map<Integer,String> previousTaskNames = new HashMap<>();
 			for (Integer n: taskNames.keySet()) {
 				
@@ -517,29 +582,25 @@ public class ProjectPlanner extends JFrame implements TableModelListener {
 			fireTableDataChanged();
 		}
 		
+		private void updateHoursByWeek() {
+			
+			hoursByWeek.clear();
+			for (int i=0; i<tasks.size(); i++) {
+				hoursByWeek.put(i, tasks.get(i).getHoursByWeek());
+			}
+			
+		}
+
 		public void moveRowDown(int selectedRow) {
 			
 			System.out.println("Received message to move row " + selectedRow + " down...");
 			// get current elements
-			String taskPriorToSwap = taskNames.get(selectedRow);
-			String taskBelowPriorToSwap = taskNames.get(selectedRow+1);
-			taskNames.put(selectedRow, taskBelowPriorToSwap);
-			taskNames.put(selectedRow+1, taskPriorToSwap);
-			
-			String resourcePriorToSwap = resourceNames.get(selectedRow);
-			String resourceBelowPriorToSwap = resourceNames.get(selectedRow+1);
-			resourceNames.put(selectedRow, resourceBelowPriorToSwap);
-			resourceNames.put(selectedRow+1, resourcePriorToSwap);
-			
-			List<Integer> hoursPriorToSwap = hoursByWeek.get(selectedRow);
-			List<Integer> hoursBelowPriorToSwap = hoursByWeek.get(selectedRow+1);
-			hoursByWeek.put(selectedRow, hoursBelowPriorToSwap);
-			hoursByWeek.put(selectedRow+1, hoursPriorToSwap);
-			
-			/*Map<Integer,String> previousTaskNames = new HashMap<>();
-			for (Integer n: taskNames.keySet()) {
-				
-			}*/
+			TaskAssignment taskToMoveDown = tasks.get(selectedRow);
+			TaskAssignment taskBelowPriorToSwap = tasks.get(selectedRow+1);
+			tasks.set(selectedRow, taskBelowPriorToSwap);
+			tasks.set(selectedRow+1, taskToMoveDown);
+
+			updateHoursByWeek();
 			fireTableDataChanged();
 		}
 		public void fromSchedule(Schedule schedule) {
@@ -551,13 +612,12 @@ public class ProjectPlanner extends JFrame implements TableModelListener {
 			Collections.sort(tasks, new TaskNameSorter());
 			Collections.sort(tasks, new EarliestStartWeekSorter());
 			
-			hoursByWeek.clear();
-			for (int i=0; i<tasks.size(); i++) {
-				hoursByWeek.put(i, tasks.get(i).getHoursByWeek());
-				taskNames.put(i, tasks.get(i).getTaskName());
-				resourceNames.put(i, tasks.get(i).getResourceName());
-				addResource(tasks.get(i).getResourceName());
+			this.tasks.clear();
+			this.tasks.addAll(tasks);
 
+			updateHoursByWeek();
+			for (int i=0; i<tasks.size(); i++) {
+				addResource(tasks.get(i).getResourceName());
 			}
 			
 			fireTableStructureChanged();
@@ -566,22 +626,19 @@ public class ProjectPlanner extends JFrame implements TableModelListener {
 		public Schedule toSchedule() {
 			Schedule schedule = new Schedule();
 			for (int i=0; i<numRows; i++) {
-				String taskName = taskNames.get(i);
-				String resourceName = resourceNames.get(i);
-				TaskAssignment task = new TaskAssignment(taskName, resourceName);
-				schedule.addTaskAssignment(task);
-				List<Integer> hours = hoursByWeek.get(i);
-				for (Integer h: hours)
-					task.addHoursForWeek(h);
+				schedule.addTaskAssignment(tasks.get(i));
 			}
 			return schedule;
 		}
 		public void addRow() {
-			this.numRows++;
-			List<Integer> hoursPerWeek = new ArrayList<>();
-			for (int i=0; i<numCols-2; i++)
-				hoursPerWeek.add(0);
-			hoursByWeek.put(numRows-1, hoursPerWeek);
+			//this.numRows++;
+			tasks.add(createEmptyTask(numWeeks));
+			numRows = tasks.size();
+			
+//			List<Integer> hoursPerWeek = new ArrayList<>();
+//			for (int i=0; i<numCols-2; i++)
+//				hoursPerWeek.add(0);
+//			hoursByWeek.put(numRows-1, hoursPerWeek);
 			System.out.println("Number of rows: " + numRows);
 			fireTableStructureChanged();
 			fireTableDataChanged();
@@ -627,57 +684,57 @@ public class ProjectPlanner extends JFrame implements TableModelListener {
 		@Override
 		public Object getValueAt(int rowIndex, int columnIndex) {
 			
-			//System.out.format("Calling getValueAt(%d,%d)\n", rowIndex, columnIndex );
+			TaskAssignment task = tasks.get(rowIndex);
+			
 			if (columnIndex == 0) {
-				String name = taskNames.get(rowIndex);
+				String name = task.getTaskName();
 				if (name == null)
 					return "Add Task Name";
 				else
 					return name;
 			}
 			else if (columnIndex == 1) {
-				return resourceNames.get(rowIndex);
+				return task.getResourceName();
 			}
 			else if (columnIndex == numCols-1) {
 				return computeTotalForRow(rowIndex);
 			}
 			else {
-				List<Integer> hoursPerWeek = hoursByWeek.get(rowIndex);
-				if (hoursPerWeek != null) {
-					int hoursInWeek = hoursPerWeek.get(columnIndex-2);
-					if (hoursInWeek > 0)
-						return hoursInWeek;
+				int hoursInWeek = task.getHoursPlannedForWeek(columnIndex-2);
+				if (hoursInWeek > 0)
+					return hoursInWeek;
 					
-					return null;
-				}
-				else
-					return null;
+				return null;
+				
 			}
 		}
 
 		@Override
 		public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
 			
+			TaskAssignment task = tasks.get(rowIndex);
+			
 			//System.out.format("Calling setValueAt(%d, %d)\n", rowIndex, columnIndex);
 			if (columnIndex == 0) {
-				taskNames.put(rowIndex, (String)aValue);
+				task.updateTaskName((String)aValue);
 				System.out.println("Setting task name " + (String)aValue + " for row " + rowIndex);
 				fireTableDataChanged();
 			}
 			else if (columnIndex == 1) {
-				resourceNames.put(rowIndex, (String)aValue);
+				task.updateResourceAssigned((String)aValue);
 				fireTableDataChanged();
 			}
 			else {
-				List<Integer> hoursPerWeek = hoursByWeek.get(rowIndex);
-				if (hoursPerWeek == null) {
+				//List<Integer> hoursPerWeek = task.get
+				/*if (hoursPerWeek == null) {
 					hoursPerWeek = new ArrayList<>();
 					for (int i=0; i<numCols-2; i++)
 						hoursPerWeek.add(0);
 					hoursByWeek.put(rowIndex, hoursPerWeek);
-				}
+				}*/
+				task.updateHoursForWeek(columnIndex-1, (Integer)aValue);
 				System.out.println("Updating value for week: " + (columnIndex-2));
-				hoursPerWeek.set(columnIndex-2, (Integer) aValue);
+//				hoursPerWeek.set(columnIndex-2, (Integer) aValue);
 				fireTableCellUpdated(rowIndex, columnIndex);
 				fireTableCellUpdated(rowIndex, numCols-1);
 			}
@@ -689,18 +746,26 @@ public class ProjectPlanner extends JFrame implements TableModelListener {
 			System.out.println("Table changed event");
 		}
 		
-	}
+		private Integer computeTotalForRow(int rowIndex) {
+			TaskAssignment task = tasks.get(rowIndex);
+			List<Integer> hours = task.getHoursByWeek();
+			int sum = 0;
+			for (Integer h: hours)
+				sum += h;
+			
+			System.out.println("Computing total for row: " + rowIndex + " = " + sum);
 
-	public Integer computeTotalForRow(int rowIndex) {
-		List<Integer> hours = hoursByWeek.get(rowIndex);
-		int sum = 0;
-		for (Integer h: hours)
-			sum += h;
+			return sum;
+		}
+
+		public void updateResourceForTaskInRow(int row, String resource) {
+			TaskAssignment task = tasks.get(row);
+			task.updateResourceAssigned(resource);
+		}
 		
-		System.out.println("Computing total for row: " + rowIndex + " = " + sum);
-
-		return sum;
 	}
+
+	
 	public void addResource(String resourceName) {
 		Set<String> resources = new HashSet<>();
 		for (int i=0; i<resourcesAvailable.getItemCount(); i++) {
@@ -729,9 +794,25 @@ public class ProjectPlanner extends JFrame implements TableModelListener {
 		System.out.println("Received table changed event");
 		TableColumnModel columnModel = projectTable.getColumnModel();
 		columnModel.getColumn(0).setPreferredWidth(300);
-		columnModel.getColumn(1).setPreferredWidth(200);
-		columnModel.getColumn(1).setCellEditor(new MyTableCellEditor(uniqueResourceNames.toArray(new String[0])));
+		columnModel.getColumn(1).setPreferredWidth(300);
 		
+		JComboBox<String> resourceOptions = new JComboBox<String>(uniqueResourceNames.toArray(new String[0]));
+		columnModel.getColumn(1).setCellEditor(new MyTableCellEditor(resourceOptions));
+		resourceOptions.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				System.out.println("Detected action.");
+				// given selected row
+				int row = projectTable.getSelectedRow();
+				JComboBox cb = (JComboBox)e.getSource();
+				int index = cb.getSelectedIndex();
+				String resource = (String)cb.getSelectedItem();
+				System.out.println("updated resource selection for row: " + row + " to resource: " + resource);
+				// given seleted item
+				projectTableModel.updateResourceForTaskInRow(row, resource);
+			}
+		});
 		DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
 		centerRenderer.setHorizontalAlignment( JLabel.CENTER );
 		

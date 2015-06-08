@@ -13,10 +13,10 @@ public class MyTableCellEditor extends AbstractCellEditor implements TableCellEd
     private JComboBox editor;
     //private String [] values = {"Analyst", "Senior Analyst", "Senior Dev", "Dev"};
 
-    public MyTableCellEditor(String[] uniqueResourceNames)
+    public MyTableCellEditor(JComboBox resourceOptions)
     {
     	// Create a new Combobox with the array of values.
-    	editor = new JComboBox(uniqueResourceNames);
+    	this.editor = resourceOptions;
     }
     
     @Override

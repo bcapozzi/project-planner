@@ -50,4 +50,21 @@ public class TaskAssignment {
 		return resourceName;
 	}
 
+	public void updateTaskName(String name) {
+
+		this.taskName = name;
+	}
+
+	public void updateResourceAssigned(String resource) {
+		this.resourceName = resource;
+	}
+
+	public void updateHoursForWeek(int weekIndex, int hours) {
+		hoursPerWeek.set(weekIndex, hours);
+	}
+
+	public int getHoursPlannedForWeek(int week) {
+		return hoursPerWeek.get(week);
+	}
+
 }
