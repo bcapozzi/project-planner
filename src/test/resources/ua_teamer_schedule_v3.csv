@@ -1,0 +1,17 @@
+Task Name,Resource,W1,W2,W3,W4,Total,W1,W2,W3,W4,Total,W1,W2,W3,W4,Total,W1,W2,W3,W4,Total,W1,W2,W3,W4,Total,W1,W2,W3,W4,Total
+Kickoff Meeting ,Senior Analyst,8,8,,,16,,,,,0,,,,,0,,,,,0,,,,,0,,,,,0
+Literature Review,Senior Analyst,4,4,4,,12,,,,,0,,,,,0,,,,,0,,,,,0,,,,,0
+Mission Use Case Analysis,Subcontractor,20,20,20,20,80,,,,,0,,,,,0,,,,,0,,,,,0,,,,,0
+High Level System Design,Senior Analyst,,4,8,8,20,,,,,0,,8,,,8,,,,4,4,,,,,0,,,,,0
+High Level System Design,Senior Dev,,,4,4,8,,,,,0,,4,,,4,,,,4,4,,,,,0,,,,,0
+Algorithm Design,Senior Analyst,,,,8,8,12,,,,12,,,12,,12,,,,,0,8,,,,8,,,,,0
+Software Prototyping,Senior Dev,,,,,0,20,20,20,,60,,,20,20,40,,,,,0,,12,8,,20,,,,,0
+Simulation Development,Senior Dev,,,,,0,,,20,20,40,,,,,0,10,10,,,20,,,8,8,16,8,8,,,16
+Sim Demo / Analysis,Senior Analyst,,,,,0,,,,8,8,20,,,,20,,8,12,,20,,,,,0,20,20,,,40
+Sim Demo / Analysis,Subcontractor,,,,,0,,,,,0,20,,,,20,,,20,,20,,,,,0,20,20,,,40
+Mid-Term Progress Report,Senior Analyst,1,1,1,1,4,1,1,1,1,4,1,1,2,4,8,,,,,0,,,,,0,,,,,0
+Final Progress Report,Senior Analyst,,,,,0,,,,,0,,,,,0,1,1,1,1,4,1,1,1,1,4,1,1,8,8,18
+Visualization of Trajectory Set Options,Senior Analyst,,,,,0,16,16,16,16,64,,,,,0,,,,,0,,,,,0,,,,,0
+Contingency / Conformance Analysis,Senior Analyst,,,,,0,,,,,0,,,,,0,,,,20,20,20,,,,20,,,,,0
+Contingency / Conformance Analysis,Subcontractor,,,,,0,,,,,0,,,,,0,,,,20,20,20,,,,20,,,,,0
+Project Lead Oversight,Wargo,,2,,,2,2,,,,2,2,,,,2,2,,,,2,2,,,,2,2,,,2,4
