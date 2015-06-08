@@ -280,8 +280,8 @@ public class ProjectPlanner extends JFrame implements TableModelListener {
         projectTable.setComponentPopupMenu(popupMenu);
 		
 		TableColumnModel columnModel = projectTable.getColumnModel();
-		columnModel.getColumn(0).setPreferredWidth(300);
-		columnModel.getColumn(1).setPreferredWidth(200);
+		columnModel.getColumn(0).setPreferredWidth(400);
+		columnModel.getColumn(1).setPreferredWidth(300);
 		
 		JComboBox<String> resourceOptions = new JComboBox<>(uniqueResourceNames.toArray(new String[0]));
 		MyTableCellEditor resourceSelector = new MyTableCellEditor(resourceOptions);
@@ -468,9 +468,8 @@ public class ProjectPlanner extends JFrame implements TableModelListener {
 	}
 
 	protected void viewSchedule(Schedule schedule) {
-		
-		
 		projectTableModel.fromSchedule(schedule);
+		scheduleArea.setText("");
 	}
 
 	protected void generateScheduleForResource(String selectedResource, String aggregateBy, int offsetWeeks) {
@@ -792,7 +791,7 @@ public class ProjectPlanner extends JFrame implements TableModelListener {
 	public void tableChanged(TableModelEvent e) {
 		System.out.println("Received table changed event");
 		TableColumnModel columnModel = projectTable.getColumnModel();
-		columnModel.getColumn(0).setPreferredWidth(300);
+		columnModel.getColumn(0).setPreferredWidth(400);
 		columnModel.getColumn(1).setPreferredWidth(300);
 		
 		JComboBox<String> resourceOptions = new JComboBox<String>(uniqueResourceNames.toArray(new String[0]));
