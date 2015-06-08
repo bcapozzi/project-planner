@@ -2,7 +2,6 @@ package com.mosaicatm.projectplanner;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
@@ -12,7 +11,6 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -28,7 +26,6 @@ import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
@@ -41,9 +38,7 @@ import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
-import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumnModel;
-import javax.swing.table.TableModel;
 
 public class ProjectPlanner extends JFrame implements TableModelListener {
 
@@ -54,9 +49,8 @@ public class ProjectPlanner extends JFrame implements TableModelListener {
 	private JButton addTaskButton;
 	private ProjectTableModel projectTableModel;
 	private JTextArea scheduleArea;
-	private JButton generateScheduleButton;
-	private JComboBox aggregateByOptions;
-	private JComboBox firstMonthStartsInWeek;
+	private JComboBox<String> aggregateByOptions;
+	private JComboBox<String> firstMonthStartsInWeek;
 	private List<String> recentFiles = new ArrayList<>();
 	private JMenu fileMenu;
 	
@@ -157,7 +151,6 @@ public class ProjectPlanner extends JFrame implements TableModelListener {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				if (e.getSource() instanceof JComboBox<?>) {
-					JComboBox<String> source = (JComboBox<String>)e.getSource();
 					
 					if (resourcesAvailable.getSelectedIndex() == 0)
 						return;
@@ -292,12 +285,13 @@ public class ProjectPlanner extends JFrame implements TableModelListener {
 				System.out.println("Detected action.");
 				// given selected row
 				int row = projectTable.getSelectedRow();
-				JComboBox cb = (JComboBox)e.getSource();
-				int index = cb.getSelectedIndex();
-				String resource = (String)cb.getSelectedItem();
-				System.out.println("updated resource selection for row: " + row + " to resource: " + resource);
-				// given seleted item
-				projectTableModel.updateResourceForTaskInRow(row, resource);
+				if (e.getSource() instanceof JComboBox<?>) {
+					JComboBox<String> cb = (JComboBox<String>)e.getSource();
+					String resource = (String)cb.getSelectedItem();
+					System.out.println("updated resource selection for row: " + row + " to resource: " + resource);
+					// given seleted item
+					projectTableModel.updateResourceForTaskInRow(row, resource);
+				}
 			}
 		});
 		columnModel.getColumn(1).setCellEditor(resourceSelector);
