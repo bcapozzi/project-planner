@@ -534,13 +534,12 @@ public class ProjectPlanner extends JFrame implements TableModelListener {
 			//String taskToDelete = taskNames.get(selectedRow);
 			System.out.println("Received message to delete task in row: " + selectedRow);
 		
-/*			numRows--;
-			taskNames.remove(numRows-1);
-			resourceNames.remove(numRows-1);
-			hoursByWeek.remove(numRows-1);
-			fireTableDataChanged();
+			tasks.remove(selectedRow);
+			updateHoursByWeek();
+			
+			numRows = tasks.size();
 			fireTableStructureChanged();
-			*/
+			fireTableDataChanged();
 		}
 
 
