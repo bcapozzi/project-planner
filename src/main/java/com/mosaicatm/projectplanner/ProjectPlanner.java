@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.swing.DefaultCellEditor;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
@@ -38,6 +39,7 @@ import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
 
 public class ProjectPlanner extends JFrame implements TableModelListener {
@@ -277,7 +279,13 @@ public class ProjectPlanner extends JFrame implements TableModelListener {
 		columnModel.getColumn(1).setPreferredWidth(300);
 		
 		JComboBox<String> resourceOptions = new JComboBox<>(uniqueResourceNames.toArray(new String[0]));
-		MyTableCellEditor resourceSelector = new MyTableCellEditor(resourceOptions);
+		
+		//
+		//MyTableCellEditor resourceSelector = new MyTableCellEditor(resourceOptions);
+		
+		TableColumn resourceAssignedColumn = projectTable.getColumnModel().getColumn(1);
+		resourceAssignedColumn.setCellEditor(new DefaultCellEditor(resourceOptions));
+		
 		resourceOptions.addActionListener(new ActionListener() {
 			
 			@Override
@@ -294,7 +302,7 @@ public class ProjectPlanner extends JFrame implements TableModelListener {
 				}
 			}
 		});
-		columnModel.getColumn(1).setCellEditor(resourceSelector);
+//		columnModel.getColumn(1).setCellEditor(resourceSelector);
 		
 		DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
 		centerRenderer.setHorizontalAlignment( JLabel.CENTER );
@@ -713,6 +721,7 @@ public class ProjectPlanner extends JFrame implements TableModelListener {
 				fireTableDataChanged();
 			}
 			else if (columnIndex == 1) {
+				System.out.println("Updating resource assigned for row: " + rowIndex + " to: " + (String)aValue);
 				task.updateResourceAssigned((String)aValue);
 				fireTableDataChanged();
 			}
@@ -789,7 +798,9 @@ public class ProjectPlanner extends JFrame implements TableModelListener {
 		columnModel.getColumn(1).setPreferredWidth(300);
 		
 		JComboBox<String> resourceOptions = new JComboBox<String>(uniqueResourceNames.toArray(new String[0]));
-		columnModel.getColumn(1).setCellEditor(new MyTableCellEditor(resourceOptions));
+		TableColumn resourceAssignedColumn = projectTable.getColumnModel().getColumn(1);
+		resourceAssignedColumn.setCellEditor(new DefaultCellEditor(resourceOptions));
+		
 		resourceOptions.addActionListener(new ActionListener() {
 			
 			@Override
@@ -797,12 +808,20 @@ public class ProjectPlanner extends JFrame implements TableModelListener {
 				System.out.println("Detected action.");
 				// given selected row
 				int row = projectTable.getSelectedRow();
+				if (row < 0)
+				{
+					System.out.println("No row selected - not updating resource");
+					return;
+				}
+				
 				JComboBox cb = (JComboBox)e.getSource();
 				int index = cb.getSelectedIndex();
 				String resource = (String)cb.getSelectedItem();
 				System.out.println("updated resource selection for row: " + row + " to resource: " + resource);
 				// given seleted item
 				projectTableModel.updateResourceForTaskInRow(row, resource);
+				
+				projectTableModel.fireTableDataChanged();
 			}
 		});
 		DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
@@ -817,6 +836,11 @@ public class ProjectPlanner extends JFrame implements TableModelListener {
 		}
 		projectTable.getColumnModel().getColumn(columnModel.getColumnCount()-1).setCellRenderer( totalRenderer );
 		
+		
+		int costInCents = 
+				projectTableModel.toSchedule().estimateCostGivenRates(costTableModel.getRateMapInCents());
+		
+		totalCostLabel.setText("$" + costInCents/100);
 	}
 	
 	public static void main(String[] args) throws Exception {
